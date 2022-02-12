@@ -1,0 +1,3 @@
+TheCoolerPID.c:9:6:CoolerPIDController_initialise	40	static
+TheCoolerPID.c:25:7:CoolerPIDController_update	40	static
+TheCoolerPID.c:44:7:CoolerPIDController_update_withFilter	56	static
