@@ -18,8 +18,8 @@
  * Define
  */
 
-#define MIN_FREQUENCY 8.0
-#define MAX_FREQUENCY 500000.0
+#define MIN_FREQUENCY 1.0
+#define MAX_FREQUENCY 25000.0
 
 /*
  * STRUCT

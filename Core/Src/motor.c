@@ -43,13 +43,13 @@ void set_pwm(TIM_HandleTypeDef *tim_pwm, uint32_t tim_channel, float freq,
 	 :param duty_cycle is % duty cycle 0.0 - 1.0
 	 :return: None
 	 */
-	if (freq < MIN_FREQUENCY){
-		freq = MIN_FREQUENCY;
-	}
-	else if (freq > MAX_FREQUENCY){
+	if (freq > MAX_FREQUENCY){
 		freq = MAX_FREQUENCY;
 	}
-	uint16_t ARR_value = 500000 / freq; //500000 come from 275MHz/550
+	else if ((freq * -1) > MAX_FREQUENCY){
+		freq = MAX_FREQUENCY;
+	}
+	uint16_t ARR_value = 50000 / freq; //500000 come from 275MHz/550
 	uint16_t CCRx_value = (ARR_value * duty_cycle);
 	if (duty_cycle == 1.0) {
 		CCRx_value = 0;

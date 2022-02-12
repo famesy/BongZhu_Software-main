@@ -43,6 +43,7 @@ typedef struct {
 void AMT21_initialise(AMT21 *dev, UART_HandleTypeDef *uartHandle,
 		uint8_t address, GPIO_TypeDef *DE_port, uint16_t DE_Pin);
 void AMT21_read_value(AMT21 *dev);
+void AMT21_set_zero(AMT21 *dev);
 HAL_StatusTypeDef AMT21_check_value(AMT21 *dev);
 int32_t AMT21_unwrap(int32_t pulse, int32_t prev_pulse);
 

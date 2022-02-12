@@ -74,10 +74,12 @@ extern ARMsProtocol_HandleTypedef ARMsProtocol_h1;
 extern ARMsProtocol_DATA ARMsProtocol_Data;
 float desired_velocity[5] = { 0 };
 
+float joint_config[5] = {0};
 float motor_config[5] = {0};
 float desired_motor_position[5] = {0};
 float delta_khe[5] = {0,0,0,0,0};
 
+uint8_t set_zero_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -176,9 +178,9 @@ int main(void)
 	USART2_DE_Pin);
 	AMT21_initialise(&encoders[2], &huart2, 0x54, USART2_DE_GPIO_Port,
 	USART2_DE_Pin);
-	AMT21_initialise(&encoders[3], &huart2, 0xE8, USART2_DE_GPIO_Port,
+	AMT21_initialise(&encoders[4], &huart2, 0xE8, USART2_DE_GPIO_Port,
 	USART2_DE_Pin);
-	AMT21_initialise(&encoders[4], &huart2, 0xB4, USART2_DE_GPIO_Port,
+	AMT21_initialise(&encoders[3], &huart2, 0xB4, USART2_DE_GPIO_Port,
 	USART2_DE_Pin);
 	/*
 	 * Stepper Initialise
@@ -189,10 +191,10 @@ int main(void)
 	DIR2_Pin, 1);
 	stepper_initialise(&steppers[2], &htim3, TIM_CHANNEL_1, DIR3_GPIO_Port,
 	DIR3_Pin, 0);//swap 1 -> 0
-	stepper_initialise(&steppers[3], &htim4, TIM_CHANNEL_1, DIR4_GPIO_Port,
+	stepper_initialise(&steppers[4], &htim4, TIM_CHANNEL_1, DIR4_GPIO_Port,
 	DIR4_Pin, 0);
-	stepper_initialise(&steppers[4], &htim15, TIM_CHANNEL_1, DIR5_GPIO_Port,
-	DIR5_Pin, 0);
+	stepper_initialise(&steppers[3], &htim15, TIM_CHANNEL_1, DIR5_GPIO_Port,
+	DIR5_Pin, 1);
 	/*
 	 * Kalman Filter Initialise
 	 */
@@ -204,11 +206,11 @@ int main(void)
 	/*
 	 * Position Pid Initialise
 	 */
-	PIDController_initialise(&position_pid_controller[0], 20000, 0, 0);
-	PIDController_initialise(&position_pid_controller[1], 800000, 0, 0);
-	PIDController_initialise(&position_pid_controller[2], 800000, 0, 0);
-	PIDController_initialise(&position_pid_controller[3], 20000, 0, 0);
-	PIDController_initialise(&position_pid_controller[4], 20000, 0, 0);
+	PIDController_initialise(&position_pid_controller[0], 1500, 0, 0);
+	PIDController_initialise(&position_pid_controller[1], 1500, 0, 0);
+	PIDController_initialise(&position_pid_controller[2], 1500, 0, 0);
+	PIDController_initialise(&position_pid_controller[3], 1500, 0, 0);
+	PIDController_initialise(&position_pid_controller[4], 1500, 0, 0);
 	/*
 	 * Velocity Pid Initialise
 	 */
@@ -226,6 +228,13 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
+		if (set_zero_flag > 0){
+			AMT21_set_zero(&encoders[3]);
+			AMT21_set_zero(&encoders[4]);
+			encoder_config[3] = 0;
+			encoder_config[4] = 0;
+			set_zero_flag = 0;
+		}
 		if (HAL_GetTick() - timestamp1 >= 500) {
 			if ((delta_khe[0] != 0)|
 			(delta_khe[1] != 0)|
@@ -234,7 +243,14 @@ int main(void)
 			(delta_khe[4] != 0)
 			) {
 				timestamp1 = HAL_GetTick();
-				IVK(motor_config, delta_khe, delta_q);
+				joint_config[0] = (2*M_PI * encoder_config[0])/16384.0f;
+				joint_config[1] = (2*M_PI * encoder_config[1])/16384.0f;
+				joint_config[2] = (2*M_PI * encoder_config[2])/16384.0f;
+				float m4 = 2*M_PI * encoder_config[3];
+				float m5 =  2*M_PI * encoder_config[4];
+				joint_config[3] = (m4 + m5) * 0.1125;
+				joint_config[4] = (m4 - m5)/8.0;
+				IVK(joint_config, delta_khe, delta_q);
 				for (int i = 0; i < 5; i++) {
 					desired_position[i] += delta_q[i];
 					delta_khe[i] = 0;
@@ -257,19 +273,18 @@ int main(void)
 					break;
 				}
 			}
-			if ((j_num == 0)|(j_num == 2)){
+			if ((j_num == 0)|(j_num == 2)|(j_num == 3)){
 				encoder_unwrap_value[j_num] = encoder_unwrap_value[j_num] * -1;
 			}
 			encoder_config[j_num] = encoder_config[j_num]
 					+ encoder_unwrap_value[j_num];
 //			KalmanFilter_Update(&kalman_filter[j_num], encoder_config[j_num]);
-			float q4 = (2*M_PI * encoder_config[3])/16384.0f;
-			float sigma = 2/(55.0 * cos(q4));
-			motor_config[0] = ((2*M_PI * encoder_config[0])/16384.0f) * (0.36f);
-			motor_config[1] = ((2*M_PI * encoder_config[1])/16384.0f)/27.0;
-			motor_config[2] = sigma * ((2*M_PI * encoder_config[2])/16384.0f);
-			motor_config[3] = q4;
-			motor_config[4] = (2*M_PI * encoder_config[4])/16384.0f;
+
+			motor_config[0] = ((2*M_PI * encoder_config[0])/16384.0f) * (25.0f/9.0f);
+			motor_config[1] = ((2*M_PI * encoder_config[1])/16384.0f) * 27.0;
+			motor_config[2] = 22.5 * sin((2*M_PI * encoder_config[2])/16384.0f);
+			motor_config[3] = (2*M_PI * encoder_config[3])/16384.0f; //checked
+			motor_config[4] = (2*M_PI * encoder_config[4])/16384.0f; //checked
 			/*
 			 * Position Controller
 			 */
