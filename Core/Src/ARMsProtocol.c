@@ -21,7 +21,7 @@
 #include "kinematic.h"
 /* Private define ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-float desired_position[5] = {0};
+float desired_position[5] = {0.03302, 7.27912, -10.293127, 2.24919939,2.24881577};
 float min_desired_position[5] = {-2000, -3500, -1700};
 float max_desired_position[5] = {2000, 1150, 1400};
 

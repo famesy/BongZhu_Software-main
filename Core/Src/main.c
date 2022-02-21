@@ -79,6 +79,10 @@ float motor_config[5] = {0};
 float desired_motor_position[5] = {0};
 float delta_khe[5] = {0,0,0,0,0};
 
+int16_t jog_cycle = 0;
+int16_t khe_cnt = 0;
+
+uint32_t performance_test = 0;
 uint8_t set_zero_flag = 0;
 /* USER CODE END PV */
 
@@ -223,6 +227,8 @@ int main(void)
 	 * for Cartesian Jog
 	 */
 	float delta_q[5] = {0};
+
+	HAL_TIM_Base_Start(&htim24);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -235,7 +241,19 @@ int main(void)
 			encoder_config[4] = 0;
 			set_zero_flag = 0;
 		}
-		if (HAL_GetTick() - timestamp1 >= 500) {
+		if (HAL_GetTick() - timestamp1 >= 250) {
+			if (jog_cycle > 0){
+				if (khe_cnt >= 0){
+					delta_khe[1] = 0.02;
+				}
+				if (khe_cnt < 0){
+					delta_khe[1] = -0.02;
+				}
+				khe_cnt++;
+				if (khe_cnt == 35){
+					khe_cnt = -34;
+				}
+			}
 			if ((delta_khe[0] != 0)|
 			(delta_khe[1] != 0)|
 			(delta_khe[2] != 0)|
@@ -246,10 +264,17 @@ int main(void)
 				joint_config[0] = (2*M_PI * encoder_config[0])/16384.0f;
 				joint_config[1] = (2*M_PI * encoder_config[1])/16384.0f;
 				joint_config[2] = (2*M_PI * encoder_config[2])/16384.0f;
-				float m4 = 2*M_PI * encoder_config[3];
-				float m5 =  2*M_PI * encoder_config[4];
+				float m4 = (2*M_PI * encoder_config[3])/16384.0f;
+				float m5 =  (2*M_PI * encoder_config[4])/16384.0f;
 				joint_config[3] = (m4 + m5) * 0.1125;
 				joint_config[4] = (m4 - m5)/8.0;
+
+//				joint_config[0] = desired_position[0];
+//				joint_config[1] = desired_position[1];
+//				joint_config[2] = desired_position[2];
+//				desired_position[3] = 0;
+//				desired_position[4] = 0;
+
 				IVK(joint_config, delta_khe, delta_q);
 				for (int i = 0; i < 5; i++) {
 					desired_position[i] += delta_q[i];
