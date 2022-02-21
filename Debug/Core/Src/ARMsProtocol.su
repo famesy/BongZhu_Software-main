@@ -8,7 +8,7 @@ ARMsProtocol.c:206:6:ARMsProtocol_FUNC_Rx_Clrbuf	24	static
 ARMsProtocol.c:219:6:ARMsProtocol_FUNC_Data_Clrbuf	16	static
 ARMsProtocol.c:232:6:ARMsProtocol_FUNC_Pathway	8	static
 ARMsProtocol.c:253:6:ARMsProtocol_FUNC_Jointjog	16	static
-ARMsProtocol.c:282:6:ARMsProtocol_FUNC_Catesianjog	80	static
+ARMsProtocol.c:283:6:ARMsProtocol_FUNC_Catesianjog	88	static
 ARMsProtocol.c:321:6:ARMsProtocol_FUNC_Trajectory	8	static
 ARMsProtocol.c:342:6:ARMsProtocol_FUNC_Gripper	8	static
 ARMsProtocol.c:362:6:ARMsProtocol_FUNC_Jointfeedback	16	static

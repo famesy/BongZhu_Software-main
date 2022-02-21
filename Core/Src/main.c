@@ -74,10 +74,8 @@ extern ARMsProtocol_HandleTypedef ARMsProtocol_h1;
 extern ARMsProtocol_DATA ARMsProtocol_Data;
 float desired_velocity[5] = { 0 };
 
-float joint_config[5] = {0};
 float motor_config[5] = {0};
 float desired_motor_position[5] = {0};
-float delta_khe[5] = {0,0,0,0,0};
 
 int16_t jog_cycle = 0;
 int16_t khe_cnt = 0;
@@ -161,7 +159,7 @@ int main(void)
   MX_CRC_Init();
   MX_TIM24_Init();
   /* USER CODE BEGIN 2 */
-	uint32_t timestamp1 = 0;
+//	uint32_t timestamp1 = 0;
 	uint32_t timestamp2 = 0;
 	uint8_t j_num = 0;
 
@@ -223,10 +221,6 @@ int main(void)
 	PIDController_initialise(&velocity_pid_controller[2], 0, 0, 0);
 	PIDController_initialise(&velocity_pid_controller[3], 0, 0, 0);
 	PIDController_initialise(&velocity_pid_controller[4], 0, 0, 0);
-	/*
-	 * for Cartesian Jog
-	 */
-	float delta_q[5] = {0};
 
 	HAL_TIM_Base_Start(&htim24);
   /* USER CODE END 2 */
@@ -234,48 +228,48 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-		if (set_zero_flag > 0){
-			AMT21_set_zero(&encoders[3]);
-			AMT21_set_zero(&encoders[4]);
-			encoder_config[3] = 0;
-			encoder_config[4] = 0;
-			set_zero_flag = 0;
-		}
-		if (HAL_GetTick() - timestamp1 >= 250) {
-			if (jog_cycle > 0){
-				if (khe_cnt >= 0){
-					delta_khe[1] = 0.0125;
-				}
-				if (khe_cnt < 0){
-					delta_khe[1] = -0.0125;
-				}
-				khe_cnt++;
-				if (khe_cnt == 35){
-					khe_cnt = -34;
-				}
-			}
-			if ((delta_khe[0] != 0)|
-			(delta_khe[1] != 0)|
-			(delta_khe[2] != 0)|
-			(delta_khe[3] != 0)|
-			(delta_khe[4] != 0)
-			) {
-				timestamp1 = HAL_GetTick();
-				joint_config[0] = (2*M_PI * encoder_config[0])/16384.0f;
-				joint_config[1] = (2*M_PI * encoder_config[1])/16384.0f;
-				joint_config[2] = (2*M_PI * encoder_config[2])/16384.0f;
-				float m4 = (2*M_PI * encoder_config[3])/16384.0f;
-				float m5 =  (2*M_PI * encoder_config[4])/16384.0f;
-				joint_config[3] = (m4 + m5) * 0.1125;
-				joint_config[4] = (m4 - m5)/8.0;
-				IVK(joint_config, delta_khe, delta_q);
-				for (int i = 0; i < 5; i++) {
-					desired_position[i] += delta_q[i];
-					delta_khe[i] = 0;
-				}
-//			ARMsProtocol_FUNC_Interface();
-			}
-		}
+//		if (set_zero_flag > 0){
+//			AMT21_set_zero(&encoders[3]);
+//			AMT21_set_zero(&encoders[4]);
+//			encoder_config[3] = 0;
+//			encoder_config[4] = 0;
+//			set_zero_flag = 0;
+//		}
+//		if (HAL_GetTick() - timestamp1 >= 250) {
+//			if (jog_cycle > 0){
+//				if (khe_cnt >= 0){
+//					delta_khe[1] = 0.0125;
+//				}
+//				if (khe_cnt < 0){
+//					delta_khe[1] = -0.0125;
+//				}
+//				khe_cnt++;
+//				if (khe_cnt == 35){
+//					khe_cnt = -34;
+//				}
+//			}
+//			if ((delta_khe[0] != 0)|
+//			(delta_khe[1] != 0)|
+//			(delta_khe[2] != 0)|
+//			(delta_khe[3] != 0)|
+//			(delta_khe[4] != 0)
+//			) {
+//				timestamp1 = HAL_GetTick();
+//				joint_config[0] = (2*M_PI * encoder_config[0])/16384.0f;
+//				joint_config[1] = (2*M_PI * encoder_config[1])/16384.0f;
+//				joint_config[2] = (2*M_PI * encoder_config[2])/16384.0f;
+//				float m4 = (2*M_PI * encoder_config[3])/16384.0f;
+//				float m5 =  (2*M_PI * encoder_config[4])/16384.0f;
+//				joint_config[3] = (m4 + m5) * 0.1125;
+//				joint_config[4] = (m4 - m5)/8.0;
+//				IVK(joint_config, delta_khe, delta_q);
+//				for (int i = 0; i < 5; i++) {
+//					desired_position[i] += delta_q[i];
+//					delta_khe[i] = 0;
+//				}
+////			ARMsProtocol_FUNC_Interface();
+//			}
+//		}
 		if (HAL_GetTick() - timestamp2 >= 1) {
 			timestamp2 = HAL_GetTick();
 			HAL_StatusTypeDef rep = HAL_ERROR;

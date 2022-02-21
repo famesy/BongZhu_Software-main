@@ -257,6 +257,7 @@ void ARMsProtocol_FUNC_Jointjog(void){
 	/* USER CODE BEGIN 3 */
 	for(int i = 0;i < 5;i++){
 		desired_position[i] = (int16_t)(ARMsProtocol_Data.Data_buf[i*2]*256 + ARMsProtocol_Data.Data_buf[(i*2)+1]);
+		desired_position[i] = desired_position[i]/100.0f;
 		if (desired_position[i] > max_desired_position[i]){
 			desired_position[i] = max_desired_position[i];
 		}
@@ -284,25 +285,24 @@ void ARMsProtocol_FUNC_Catesianjog(void){
 	ARMsProtocol_EXCEPTION_Response(ARMsProtocol_h1.handle, ARMsProtocol_TRANSMIT_ACKNOWLEDGE);
 	ARMsProtocol_Data.Catesian_flag = 1;
 	/* USER CODE BEGIN 4 */
-	float delta_khe[5] = {0};
-	float desired_motor_position[5] = {0};
-	float motor_position[5] = {0};
-	float q4 = (2*M_PI * encoder_config[3])/16384.0f;
-	float sigma = 2/(55.0 * cos(q4));
-	motor_position[0] = ((2*M_PI * encoder_config[0])/16384.0f) * (0.36f);
-	motor_position[1] = ((2*M_PI * encoder_config[1])/16384.0f)/27.0;
-	motor_position[2] = sigma;
-	motor_position[3] = q4;
-	motor_position[4] = (2*M_PI * encoder_config[4])/16384.0f;
+	float delta_khe[5] = {0,0,0,0,0};
+	float joint_config[5] = {0};
+	float delta_q[5] = {0};
 	for (int i = 0; i <5; i++){
 		delta_khe[i] = (int16_t)(ARMsProtocol_Data.Data_buf[i*2]*256 + ARMsProtocol_Data.Data_buf[(i*2)+1]);
+		delta_khe[i] = delta_khe[i]/100.0f;
 	}
-	IVK(motor_position, delta_khe, desired_motor_position);
-	desired_position[0] = (desired_motor_position[0] * 16384.0)/(2*M_PI);
-	desired_position[1] = (desired_motor_position[1] * 16384.0)/(2*M_PI);
-	desired_position[2] = (desired_motor_position[2] * 16384.0)/(2*M_PI);
-	desired_position[3] = (desired_motor_position[3] * 16384.0)/(2*M_PI);
-	desired_position[4] = (desired_motor_position[4] * 16384.0)/(2*M_PI);
+	joint_config[0] = (2*M_PI * encoder_config[0])/16384.0f;
+	joint_config[1] = (2*M_PI * encoder_config[1])/16384.0f;
+	joint_config[2] = (2*M_PI * encoder_config[2])/16384.0f;
+	float m4 = (2*M_PI * encoder_config[3])/16384.0f;
+	float m5 =  (2*M_PI * encoder_config[4])/16384.0f;
+	joint_config[3] = (m4 + m5) * 0.1125;
+	joint_config[4] = (m4 - m5)/8.0;
+	IVK(joint_config, delta_khe, delta_q);
+	for (int i = 0; i < 5; i++) {
+		desired_position[i] += delta_q[i];
+	}
 	/* USER CODE END 4 */
 
 	// Clear Data
