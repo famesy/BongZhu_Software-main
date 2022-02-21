@@ -244,10 +244,10 @@ int main(void)
 		if (HAL_GetTick() - timestamp1 >= 250) {
 			if (jog_cycle > 0){
 				if (khe_cnt >= 0){
-					delta_khe[1] = 0.02;
+					delta_khe[1] = 0.0125;
 				}
 				if (khe_cnt < 0){
-					delta_khe[1] = -0.02;
+					delta_khe[1] = -0.0125;
 				}
 				khe_cnt++;
 				if (khe_cnt == 35){
@@ -268,13 +268,6 @@ int main(void)
 				float m5 =  (2*M_PI * encoder_config[4])/16384.0f;
 				joint_config[3] = (m4 + m5) * 0.1125;
 				joint_config[4] = (m4 - m5)/8.0;
-
-//				joint_config[0] = desired_position[0];
-//				joint_config[1] = desired_position[1];
-//				joint_config[2] = desired_position[2];
-//				desired_position[3] = 0;
-//				desired_position[4] = 0;
-
 				IVK(joint_config, delta_khe, delta_q);
 				for (int i = 0; i < 5; i++) {
 					desired_position[i] += delta_q[i];
